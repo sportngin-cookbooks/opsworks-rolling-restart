@@ -11,6 +11,6 @@ platforms:
 suites:
   - name: default
     run_list:
-      - recipe[opsworks-safe-restart]
+      - recipe[opsworks-rolling-restart]
     attributes:
 
