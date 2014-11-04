@@ -11,16 +11,16 @@ Requires a configured ssh access for a user on an app
 instance
 
 # Attributes
-`node[:rolling_restart][:restart_command]`
-`node[:rolling_restart][:ssh][:user]`
-`node[:rolling_restart][:ssh][:public_key]`
-`node[:rolling_restart][:load_balancer][:remove_command]`
-`node[:rolling_restart][:load_balancer][:add_command]`
+* `node[:rolling_restart][:restart_command]`
+* `node[:rolling_restart][:ssh][:user]`
+* `node[:rolling_restart][:ssh][:public_key]`
+* `node[:rolling_restart][:load_balancer][:remove_command]`
+* `node[:rolling_restart][:load_balancer][:add_command]`
 
 # Recipes
 
-`setup`
-`default`
+* `setup`
+* `default`
 
 # Author
 
