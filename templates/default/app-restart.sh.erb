@@ -1,0 +1,49 @@
+#!bin/bash
+TIMEOUT=<%= @restart_timeout %>
+PORT=<%= @app_port %>
+
+# FAILURE TIME TO DIE
+function die {
+  echo "ERROR: $1"
+  exit 1
+}
+
+# Let the app server finish any open requests
+function finish_requests {
+ <%= @finishe_requests_command %>
+}
+
+# Is the app currently running
+function app_running {
+  <%= @app_running_command %>
+}
+
+# Wait until the app is running
+function app_up {
+  # Give the app *at least* a minute to boot
+  # (curl will wait 5 seconds per attempt)
+  for i in {1..$TIMEOUT}
+  do
+    app_running && return
+    status=$?
+    sleep 1
+  done
+
+  return $status
+}
+
+
+# Remove Instance from the load balancer
+<%= "#{@base_dir}/#{@remove_bin}" %>
+
+# Allow open requests to finish
+finish_requests
+
+# Restart the application
+<%= @restart_command %>
+
+# Wait for the app to come back up or fail the restart
+app_up || die "restart failed"
+
+# Add Instance back into the load balancer
+<%= "#{@base_dir}/#{@add_bin}" %>
