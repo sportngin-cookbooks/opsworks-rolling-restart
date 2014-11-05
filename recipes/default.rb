@@ -1,8 +1,9 @@
 # Cookbook Name:: opsworks-rolling-restart
 # Recipe:: default
 
-normal[:appname] = node[:opsworks][:applications].first["slug_name"]
-public_key = node[node[:appname]][:deploy_pub_key]
+user = node[:rolling_restart][:ssh][:user]
+public_key = node[:rolling_restart][:ssh][:public_key]
+
 instances = []
 node[:opsworks][:layers].each do |layer, layer_attrs|
   if layer.to_s.include?("app")
@@ -12,7 +13,7 @@ end
 
 template "/usr/local/bin/rolling_restart.sh" do
   source "rolling_restart.sh.erb"
-  owner node[:user]
+  owner user
   group node[:group]
   mode 0755
   action :create
@@ -21,11 +22,11 @@ template "/usr/local/bin/rolling_restart.sh" do
 end
 
 
-file "/home/#{node[:user]}/.ssh/authorized_keys" do
-  owner node[:user]
+file "/home/#{user}/.ssh/authorized_keys" do
+  owner user
   group node[:group]
   mode 0700
   backup false
-  content node[:public_key]
-end
+  content public_key
+end if public_key
 
