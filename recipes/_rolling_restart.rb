@@ -11,8 +11,8 @@ node[:opsworks][:layers].each do |layer, layer_attrs|
   end
 end
 
-template "/usr/local/bin/rolling_restart.sh" do
-  source "rolling_restart.sh.erb"
+template "/usr/local/bin/rolling_restart" do
+  source "rolling_restart.erb"
   owner user
   group group
   mode 0755

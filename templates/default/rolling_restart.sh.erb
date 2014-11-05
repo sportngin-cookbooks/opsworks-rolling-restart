@@ -1,5 +1,0 @@
-#!/bin/sh
-instances=(<%= @instances.join(' ') %>)
-for i in ${instances[@]}
-  do ssh deploy@$i restart_app
-done
