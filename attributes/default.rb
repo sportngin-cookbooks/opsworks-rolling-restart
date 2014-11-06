@@ -19,6 +19,6 @@ default[:app_restart][:restart_bin] = 'app-restart'
 default[:app_restart][:restart_template] = 'app-restart.sh.erb'
 
 default[:app_restart][:app_running_command] = 'curl --silent --fail --max-time 5 127.0.0.1:$PORT/okcomputer'
-default[:app_restart][:finishe_requests_command] = 'sleep 10'
+default[:app_restart][:finished_requests_command] = 'sleep 10'
 default[:app_restart][:app_port] = 81
 default[:app_restart][:timeout] = 60
