@@ -3,7 +3,29 @@ driver:
   name: vagrant
 provisioner:
   name: chef_solo
-  attributes: { safe_restart: { restart_command: "echo restart" } }
+  attributes:
+    safe_restart: 
+      restart_command: "echo restart"
+    rolling_restart: 
+      restart_command: "sh rolling_restart"
+      ssh: 
+        user: "deploy"
+        public_key: "ssh-rsa IAMAPUBLICKEY"
+    opsworks: 
+      layers: 
+        rails-puma-app: 
+          instances: 
+            app-01: 
+              private_ip: "10.0.0.1"
+            app-02: 
+              private_ip: "10.0.0.2"
+        utility: 
+          instances: 
+            util-01: 
+              private_ip: "10.0.0.3"
+            util-02: 
+              private_ip: "10.0.0.4"
+
 platforms:
   - name: centos-6.6
     driver_config:
