@@ -5,9 +5,7 @@ default[:rolling_restart][:ssh][:group] = 'opsworks'
 
 default[:rolling_restart][:restart_command] = 'rolling_restart'
 
-default[:app_restart][:load_balancer][:ip] = load_balancer[:private_ip]
-default[:app_restart][:load_balancer][:remove_command] = "ssh #{node[:rolling_restart][:ssh][:user]}@#{node[:rolling_restart][:load_balancer][:ip]} \"sudo sed -i -r 's/(.*server.*#{node[:local_ipv4}}.*)/#&/g' /etc/haproxy.cfg; sudo /etc/init.d/haproxy reload\""
-default[:app_restart][:load_balancer][:add_command] = "ssh #{node[:rolling_restart][:ssh][:user]}@#{node[:rolling_restart][:load_balancer][:ip]} \"sudo sed -i -r 's/^#*(.*server.*#{node[:local_ipv4}}.*)/\1/g' /etc/haproxy.cfg; sudo /etc/init.d/haproxy reload\""
+default[:app_restart][:load_balancer_ip] = nil
 
 default[:app_restart][:base_dir] = '/usr/local/bin'
 

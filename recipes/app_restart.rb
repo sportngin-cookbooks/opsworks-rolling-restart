@@ -1,6 +1,9 @@
+extend RollingRestart::Helpers
 
-template "#{node[:rolling_restart][:base_dir]}/#{node[:rolling_restart][:remove_bin]}" do
-  source node[:rolling_restart][:remove_template]
+node.set[:app_restart][:load_balancer_ip] = load_balancer[:private_ip] if load_balancer && !node[:app_restart][:load_balancer_ip]
+
+template "#{node[:app_restart][:base_dir]}/#{node[:app_restart][:remove_bin]}" do
+  source node[:app_restart][:remove_template]
   cookbook node[:rolling_restart][:cookbook]
   variables(node[:app_restart])
   mode '0755'
