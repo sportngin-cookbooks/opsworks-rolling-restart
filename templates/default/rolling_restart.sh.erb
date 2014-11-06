@@ -4,7 +4,7 @@ function die {
   echo "ERROR: $1"
   exit 1
 }
-instances=(<%= @instances.join(' ') %>)
+instances=(<%= @ip_addresses.join(' ') %>)
 for i in ${instances[@]}
   do ssh deploy@$i restart_app || die 'The app running on $i failed to restart'
 done
