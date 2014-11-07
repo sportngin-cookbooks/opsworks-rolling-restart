@@ -3,11 +3,13 @@ default[:rolling_restart][:cookbook] = 'opsworks-rolling-restart'
 default[:rolling_restart][:ssh][:user] = 'deploy'
 default[:rolling_restart][:ssh][:group] = 'opsworks'
 
-default[:rolling_restart][:restart_command] = 'rolling_restart'
+default[:rolling_restart][:bin_dir] = '/usr/local/bin'
+default[:rolling_restart][:template] = 'rolling-restart.sh.erb'
+default[:rolling_restart][:bin] = 'rolling-restart'
 
 default[:app_restart][:load_balancer_ip] = nil
 
-default[:app_restart][:base_dir] = '/usr/local/bin'
+default[:app_restart][:bin_dir] = '/usr/local/bin'
 
 default[:app_restart][:add_bin] = 'haproxy-add'
 default[:app_restart][:add_template] = 'haproxy-add.sh.erb'
