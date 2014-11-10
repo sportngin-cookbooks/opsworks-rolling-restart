@@ -4,7 +4,8 @@ driver:
 provisioner:
   name: chef_solo
   attributes:
-    local_ipv4: "10.0.0.3"
+    cloud:
+      local_ipv4: "10.0.0.3"
     app_restart:
       restart_command: "echo restart"
     rolling_restart:
@@ -36,6 +37,5 @@ suites:
   - name: default
     run_list:
       - recipe[opsworks-rolling-restart]
-      - recipe[opsworks-rolling-restart::app_restart]
     attributes:
 
