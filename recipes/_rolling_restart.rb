@@ -7,12 +7,17 @@ group = node[:rolling_restart][:ssh][:group]
 
 instances = app_instances
 
-template "/usr/local/bin/rolling_restart" do
-  source "rolling_restart.sh.erb"
+template "#{node[:rolling_restart][:bin_dir]}/#{node[:rolling_restart][:bin]}" do
+  source node[:rolling_restart][:template]
+  cookbook node[:rolling_restart][:cookbook]
   owner user
   group group
   mode 0755
   action :create
   backup false
-  variables :ip_addresses => instances.map{|hostname, data| data[:private_ip] }
+  variables(
+    :app_restart_command => "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:restart_bin]}",
+    :ip_addresses => instances.map{|hostname, data| data[:private_ip] },
+    :user => user
+  )
 end
