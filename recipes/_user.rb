@@ -26,7 +26,7 @@ directory "#{home_dir}/.ssh" do
 end
 
 authorized_keys_file = "#{home_dir}/.ssh/authorized_keys"
-if File.exist?(authorized_keys_file)
+if File.size?(authorized_keys_file)
   ruby_block "Add Rolling Restart User's public key" do
     block do
       file = Chef::Util::FileEdit.new(authorized_keys_file)
