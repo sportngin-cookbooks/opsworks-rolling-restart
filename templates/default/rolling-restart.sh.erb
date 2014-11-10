@@ -6,5 +6,5 @@ function die {
 }
 instances=(<%= @ip_addresses.join(' ') %>)
 for i in ${instances[@]}
-  do ssh <%= @user %>@$i <%= @app_restart_command %> || die 'The app running on $i failed to restart'
+  do sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die 'The app running on $i failed to restart'
 done
