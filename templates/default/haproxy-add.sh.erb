@@ -1,2 +1,2 @@
 #!/bin/bash
-ssh <%= node[:rolling_restart][:ssh][:user] %>@<%= node[:app_restart][:load_balancer_ip] %> "sudo sed -i -r 's/^#*(.*server.*<%= node[:cloud][:local_ipv4] %>.*)/\1/g' /etc/haproxy/haproxy.cfg; sudo /etc/init.d/haproxy reload"
+sudo -u <%= node[:rolling_restart][:ssh][:user] %> ssh <%= node[:rolling_restart][:ssh][:user] %>@<%= node[:app_restart][:load_balancer_ip] %> "sudo sed -i -r 's/^#*(.*server.*<%= node[:cloud][:local_ipv4] %>.*)/\1/g' /etc/haproxy/haproxy.cfg; sudo /etc/init.d/haproxy reload"
