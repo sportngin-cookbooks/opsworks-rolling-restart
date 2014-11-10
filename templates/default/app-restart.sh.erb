@@ -34,7 +34,7 @@ function app_up {
 
 
 # Remove Instance from the load balancer
-<%= "#{@base_dir}/#{@remove_bin}" %>
+<%= "#{@bin_dir}/#{@remove_bin}" %>
 
 # Allow open requests to finish
 finish_requests
@@ -46,4 +46,4 @@ finish_requests
 app_up || die "restart failed"
 
 # Add Instance back into the load balancer
-<%= "#{@base_dir}/#{@add_bin}" %>
+<%= "#{@bin_dir}/#{@add_bin}" %>
