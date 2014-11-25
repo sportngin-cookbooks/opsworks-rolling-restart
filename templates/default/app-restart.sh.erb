@@ -22,7 +22,7 @@ function app_running {
 function app_up {
   # Give the app *at least* a minute to boot
   # (curl will wait 5 seconds per attempt)
-  for i in {1..$TIMEOUT}
+  for i in $(seq 1 $TIMEOUT)
   do
     app_running && return
     status=$?
