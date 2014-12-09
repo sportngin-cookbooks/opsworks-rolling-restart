@@ -40,10 +40,12 @@ function app_up {
 finish_requests
 
 # Restart the application
+echo "================ ATTEMPTING to RESTART <%= node[:hostname] %> ================"
 <%= @restart_command %>
 
 # Wait for the app to come back up or fail the restart
-app_up || die "restart failed"
+app_up || die "**************** RESTART FAILED <%= node[:hostname] %> ****************"
+echo "================ RESTART COMPLETE <%= node[:hostname] %> ================"
 
 # Add Instance back into the load balancer
 <%= "#{@bin_dir}/#{@add_bin}" %>

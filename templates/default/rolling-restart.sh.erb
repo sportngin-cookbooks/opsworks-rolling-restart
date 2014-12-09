@@ -5,6 +5,10 @@ function die {
   exit 1
 }
 instances=(<%= @ip_addresses.join(' ') %>)
-for i in ${instances[@]}
-  do sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die "The app running on $i failed to restart"
+instance_num=1
+for i in ${instances[@]};do
+  echo "================ Starting Restart $instance_num of ${#instances[@]} ================"
+  sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die "**************** RESTART FAILED ON $i ****************"
+  echo "================ Finished Restart $instance_num of ${#instances[@]} ================"
+  ((instance_num++))
 done
