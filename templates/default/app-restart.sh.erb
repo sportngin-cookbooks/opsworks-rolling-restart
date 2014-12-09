@@ -19,7 +19,7 @@ function finish_requests {
 
 # Is the app currently running
 function app_running {
-  <%= @app_running_command %>
+  <%= @app_running_command %> && echo
 }
 
 # Wait until the app is running
