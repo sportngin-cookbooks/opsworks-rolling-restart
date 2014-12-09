@@ -1,10 +1,20 @@
 #!/bin/bash
 
-function die {
-  echo "ERROR: $1"
+# FAILURE TIME TO DIE
+function die_loudly {
+  echo "**************** $@ ****************"
   exit 1
 }
+
+function say_loudly {
+  echo "================ $@ ================"
+}
+
 instances=(<%= @ip_addresses.join(' ') %>)
-for i in ${instances[@]}
-  do sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die "The app running on $i failed to restart"
+instance_num=1
+for i in ${instances[@]};do
+  say_loudly "Starting Restart $instance_num of ${#instances[@]}"
+  sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die_loudly "RESTART FAILED ON $i"
+  say_loudly "Finished Restart $instance_num of ${#instances[@]}"
+  ((instance_num++))
 done
