@@ -1,3 +1,8 @@
 #!/bin/bash
-echo "================ REMOVING <%= node[:hostname] %> FROM LB: <%= node[:app_restart][:load_balancer_ip] %> ================"
+
+function say_loudly {
+  echo "================ $@ ================"
+}
+
+say_loudly "REMOVING <%= node[:hostname] %> FROM LB: <%= node[:app_restart][:load_balancer_ip] %>"
 sudo -u <%= node[:rolling_restart][:ssh][:user] %> ssh <%= node[:rolling_restart][:ssh][:user] %>@<%= node[:app_restart][:load_balancer_ip] %> "sudo sed -i -r 's/(.*server.*<%= node[:cloud][:local_ipv4] %>.*)/#&/g' /etc/haproxy/haproxy.cfg; sudo /etc/init.d/haproxy reload"
