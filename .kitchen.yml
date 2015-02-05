@@ -19,7 +19,7 @@ provisioner:
       restart_command: "echo restart"
       app_ready_command: "sleep 4"
     rolling_restart:
-      app_command: "rolling_restart"
+      restart_command: "rolling_restart"
       ssh:
         user: "deploy"
         public_key: "ssh-rsa IAMAPUBLICKEY"
