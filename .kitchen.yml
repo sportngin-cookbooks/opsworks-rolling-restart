@@ -1,6 +1,15 @@
----
+<% if fog_file = File.expand_path('~/.fog') and File.exists?(fog_file)
+  fog_file = YAML.load_file(fog_file)
+  ENV['AWS_ACCESS_KEY_ID'] ||= fog_file.fetch('travis-ci', {})['aws_access_key_id']
+  ENV['AWS_SECRET_ACCESS_KEY'] ||= fog_file.fetch('travis-ci', {})['aws_secret_access_key']
+  ENV['AWS_KEYPAIR_NAME'] ||= fog_file.fetch('travis-ci', {})['aws_keypair_name']
+  ENV['EC2_SSH_KEY_PATH'] ||= File.expand_path('~/.ssh/id_rsa_kitchen_ec2')
+end %>
 driver:
-  name: vagrant
+  aws_access_key_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
+  aws_secret_access_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
+  aws_ssh_key_id: <%= ENV['AWS_KEYPAIR_NAME'] %>
+  require_chef_omnibus: "11.4.4"
 provisioner:
   name: chef_solo
   attributes:
@@ -8,6 +17,7 @@ provisioner:
       local_ipv4: "10.0.0.3"
     app_restart:
       restart_command: "echo restart"
+      app_ready_command: "sleep 4"
     rolling_restart:
       restart_command: "rolling_restart"
       ssh:
@@ -30,9 +40,20 @@ provisioner:
               private_ip: "10.0.0.4"
 
 platforms:
-  - name: centos-6.6
+  - name: amazon-2014.10
+    driver_plugin: ec2
     driver_config:
-      require_chef_omnibus: "11.4 -d /tmp/vagrant-cache/vagrant_omnibus"
+      ssh_key: <%= ENV['EC2_SSH_KEY_PATH'] %>
+      username: ec2-user
+      flavor_id: c3.large
+      image_id: ami-b66ed3de
+      region: us-east-1
+      availability_zone: us-east-1b
+      security_group_ids: ['ci-testing']
+      interface: public
+      tags:
+        Name: <%= "#{ENV['CI'] ? 'travis-ci' : ENV['USER']}-opsworks-rolling-restart-test-kitchen" %>
+        Env: public
 suites:
   - name: default
     run_list:
