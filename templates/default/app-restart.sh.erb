@@ -49,7 +49,7 @@ finish_requests
 
 # Restart the application
 say_loudly "ATTEMPTING to RESTART <%= node[:hostname] %>"
-<%= @restart_command %>
+<%= @restart_command %> || die_loudly "RESTART FAILED <%= node[:hostname] %>"
 
 # Wait for the app to come back up or fail the restart
 app_up || die_loudly "RESTART FAILED <%= node[:hostname] %>"

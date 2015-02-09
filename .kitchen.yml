@@ -59,4 +59,10 @@ suites:
     run_list:
       - recipe[opsworks-rolling-restart]
     attributes:
+  - name: nginx_restart_fail
+    run_list:
+      - recipe[opsworks-rolling-restart]
+    attributes:
+      app_restart:
+        restart_command: "nginx restart"
 
