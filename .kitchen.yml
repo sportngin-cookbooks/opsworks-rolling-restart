@@ -13,8 +13,6 @@ driver:
 provisioner:
   name: chef_solo
   attributes:
-    cloud:
-      local_ipv4: "10.0.0.3"
     app_restart:
       restart_command: "echo restart"
       app_ready_command: "sleep 4"
