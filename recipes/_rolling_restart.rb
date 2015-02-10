@@ -16,6 +16,8 @@ template "#{node[:rolling_restart][:bin_dir]}/#{node[:rolling_restart][:bin]}" d
   action :create
   backup false
   variables(
+    :before_restart_command => node[:rolling_restart][:before_command],
+    :after_restart_command => node[:rolling_restart][:after_command],
     :app_restart_command => "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:restart_bin]}",
     :ip_addresses => instances.map{|hostname, data| data[:private_ip] },
     :user => user

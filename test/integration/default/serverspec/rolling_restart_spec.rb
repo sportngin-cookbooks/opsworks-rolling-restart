@@ -8,4 +8,6 @@ describe file('/usr/local/bin/rolling-restart') do
   it { should_not contain '10.0.0.3', '10.0.0.4' }
   it { should contain 'ssh deploy@$i /usr/local/bin/app-restart' }
   it { should contain 'function die' }
+  it { should contain 'echo before_command'}
+  it { should contain 'echo after_command'}
 end
