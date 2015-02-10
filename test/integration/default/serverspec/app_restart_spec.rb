@@ -14,15 +14,14 @@ end
 
 describe file('/usr/local/bin/haproxy-add') do
   it { should be_file }
-  it { should contain 'server.*10.0.0.3' }
+  its(:content) { should match /server.*10\.\d+\.\d+\.\d+/ }
   it { should contain 'ssh deploy@10.0.0.1' }
   it { should_not contain '10.0.0.2' }
 end
 
 describe file('/usr/local/bin/haproxy-remove') do
   it { should be_file }
-  it { should contain 'server.*10.0.0.3' }
+  its(:content) { should match /server.*10\.\d+\.\d+\.\d+/ }
   it { should contain 'ssh deploy@10.0.0.1' }
   it { should_not contain '10.0.0.2' }
 end
-

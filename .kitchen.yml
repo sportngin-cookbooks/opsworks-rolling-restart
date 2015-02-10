@@ -13,8 +13,6 @@ driver:
 provisioner:
   name: chef_solo
   attributes:
-    cloud:
-      local_ipv4: "10.0.0.3"
     app_restart:
       restart_command: "echo restart"
       app_ready_command: "sleep 4"
@@ -59,4 +57,10 @@ suites:
     run_list:
       - recipe[opsworks-rolling-restart]
     attributes:
+  - name: nginx_restart_fail
+    run_list:
+      - recipe[opsworks-rolling-restart]
+    attributes:
+      app_restart:
+        restart_command: "nginx restart"
 
