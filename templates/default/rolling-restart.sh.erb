@@ -10,15 +10,7 @@ function say_loudly {
   echo "================ $@ ================"
 }
 
-function before_command {
-  <%= node[:rolling_restart][:before_command] %>
-}
-
-function after_command {
-  <%= node[:rolling_restart][:after_command] %>
-}
-
-before_command
+<%= @before_restart_command %>
 
 instances=(<%= @ip_addresses.join(' ') %>)
 instance_num=1
@@ -29,4 +21,4 @@ for i in ${instances[@]};do
   ((instance_num++))
 done
 
-after_command
+<%= @after_restart_command %>

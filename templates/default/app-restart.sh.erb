@@ -22,11 +22,6 @@ function app_running {
   <%= @app_running_command %> && echo
 }
 
-# Is the app ready to serve traffic
-function app_ready {
-  <%= @app_ready_command %>
-}
-
 # Wait until the app is running
 function app_up {
   # Give the app *at least* a minute to boot
@@ -36,8 +31,7 @@ function app_up {
     status=$?
     sleep 1
   done
-  app_ready
-
+  <%= @app_ready_command %>
   return $status
 }
 
