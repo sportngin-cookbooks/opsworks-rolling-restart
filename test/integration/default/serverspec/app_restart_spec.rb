@@ -4,12 +4,14 @@ describe file('/usr/local/bin/app-restart') do
   it { should be_file }
   it { should contain "RETRIES=10" }
   it { should contain "PORT=81" }
-  it { should contain "sleep 4"}
   it { should contain "sleep 10" }
   it { should contain "curl" }
   it { should contain "haproxy-add" }
   it { should contain "haproxy-remove" }
   it { should contain "echo restart" }
+  it { should_not contain "app_ready"}
+  it { should_not contain "before_command"}
+  it { should_not contain "after_command"}
 end
 
 describe file('/usr/local/bin/haproxy-add') do

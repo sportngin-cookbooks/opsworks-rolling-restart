@@ -6,8 +6,6 @@ default[:rolling_restart][:ssh][:group] = 'opsworks'
 default[:rolling_restart][:bin_dir] = '/usr/local/bin'
 default[:rolling_restart][:template] = 'rolling-restart.sh.erb'
 default[:rolling_restart][:bin] = 'rolling-restart'
-default[:rolling_restart][:before_command]= nil
-default[:rolling_restart][:after_command]= nil
 
 default[:app_restart][:load_balancer_ip] = nil
 
@@ -23,7 +21,6 @@ default[:app_restart][:restart_bin] = 'app-restart'
 default[:app_restart][:restart_template] = 'app-restart.sh.erb'
 
 default[:app_restart][:app_running_command] = 'curl --silent --fail --max-time 5 127.0.0.1:$PORT/okcomputer'
-default[:app_restart][:app_ready_command] = nil
 default[:app_restart][:finished_requests_command] = 'sleep 10'
 default[:app_restart][:app_port] = 81
 default[:app_restart][:retries] = 10

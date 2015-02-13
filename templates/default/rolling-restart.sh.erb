@@ -10,7 +10,19 @@ function say_loudly {
   echo "================ $@ ================"
 }
 
-<%= @before_restart_command %>
+<% if @before_restart_command %>
+function before_command {
+  <%= @before_restart_command %>
+}
+
+<% end %>
+<% if @after_restart_command %>
+function after_command {
+  <%= @after_restart_command %>
+}
+
+<% end %>
+<%= "before_command" if @before_restart_command %>
 
 instances=(<%= @ip_addresses.join(' ') %>)
 instance_num=1
@@ -21,4 +33,4 @@ for i in ${instances[@]};do
   ((instance_num++))
 done
 
-<%= @after_restart_command %>
+<%= "after_command" if @after_restart_command %>
