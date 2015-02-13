@@ -10,19 +10,19 @@ function say_loudly {
   echo "================ $@ ================"
 }
 
-<% if node[:rolling_restart][:before_command] %>
+<% if @before_restart_command %>
 function before_command {
-  <%= node[:rolling_restart][:before_command] %>
+  <%= @before_restart_command %>
 }
 
 <% end %>
-<% if node[:rolling_restart][:after_command] %>
+<% if @after_restart_command %>
 function after_command {
-  <%= node[:rolling_restart][:after_command] %>
+  <%= @after_restart_command %>
 }
 
 <% end %>
-<%= "before_command" if node[:rolling_restart][:before_command] %>
+<%= "before_command" if @before_restart_command %>
 
 instances=(<%= @ip_addresses.join(' ') %>)
 instance_num=1
@@ -33,4 +33,4 @@ for i in ${instances[@]};do
   ((instance_num++))
 done
 
-<%= "after_command" if node[:rolling_restart][:after_command] %>
+<%= "after_command" if @after_restart_command %>
