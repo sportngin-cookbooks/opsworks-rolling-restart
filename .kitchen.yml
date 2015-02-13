@@ -15,7 +15,6 @@ provisioner:
   attributes:
     app_restart:
       restart_command: "echo restart"
-      app_ready_command: "sleep 4"
     rolling_restart:
       before_command: "echo before_command"
       restart_command: "rolling_restart"
@@ -65,4 +64,6 @@ suites:
     attributes:
       app_restart:
         restart_command: "nginx restart"
-
+        app_ready_command: "echo 'The app is ready'"
+        before_command: "echo 'Starting app restart'"
+        after_command: "echo 'Finished app restart'"

@@ -22,6 +22,24 @@ function app_running {
   <%= @app_running_command %> && echo
 }
 
+<% if @app_ready_command %>
+function app_ready {
+  <%= @app_ready_command %>
+}
+
+<% end %>
+<% if @before_command %>
+function before_command {
+  <%= @before_command %>
+}
+
+<% end %>
+<% if @after_command %>
+function after_command {
+  <%= @after_command %>
+}
+
+<% end %>
 # Wait until the app is running
 function app_up {
   # Give the app *at least* a minute to boot
@@ -31,9 +49,11 @@ function app_up {
     status=$?
     sleep 1
   done
-  <%= @app_ready_command %>
+  <%= "app_ready" if @app_ready_command %>
   return $status
 }
+
+<%= "before_command" if @before_command %>
 
 # Remove Instance from the load balancer
 <%= "#{@bin_dir}/#{@remove_bin}" %>
@@ -51,3 +71,5 @@ say_loudly "RESTART COMPLETE <%= node[:hostname] %>"
 
 # Add Instance back into the load balancer
 <%= "#{@bin_dir}/#{@add_bin}" %>
+
+<%= "after_command" if @after_command %>
