@@ -1,6 +1,11 @@
 extend RollingRestart::Helpers
 
-node.set[:app_restart][:load_balancer_ip] = load_balancer[:private_ip] if load_balancer && !node[:app_restart][:load_balancer_ip]
+if elb_load_balancer?
+  node.set[:app_restart][:elb_load_balancer] = elb_load_balancer if elb_load_balancer && !node[:app_restart][:elb_load_balancer]
+else
+  node.set[:app_restart][:load_balancer_ip] = load_balancer[:private_ip] if load_balancer && !node[:app_restart][:load_balancer_ip]
+end
+
 
 template "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:remove_bin]}" do
   source node[:app_restart][:remove_template]

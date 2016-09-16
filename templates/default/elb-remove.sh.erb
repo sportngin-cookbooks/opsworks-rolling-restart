@@ -1,0 +1,8 @@
+#!/bin/bash
+
+function say_loudly {
+  echo "================ $@ ================"
+}
+
+say_loudly "REMOVING <%= node[:hostname] %> TO ELB: <%= node[:app_restart][:elb_load_balancer][:name] %>"
+/usr/local/bin/ruby <%= node[:app_restart][:bin_dir] %>/elb_manager.rb <%= node[:opsworks][:instance][:region] %> <%= node[:app_restart][:elb_load_balancer][:name] %> <%= node[:ec2][:instance_id] %> register
