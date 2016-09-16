@@ -15,5 +15,13 @@ module RollingRestart
         data[:elastic_ip] && !data[:elastic_ip].empty?
       }.last
     end
+
+    def elb_load_balancer
+      node[:opsworks][:stack][:'elb-load-balancers'].first
+    end
+
+    def elb_load_balancer?
+      node[:rolling_restart][:load_balancer_type] == 'elb'
+    end
   end
 end
