@@ -2,6 +2,11 @@ extend RollingRestart::Helpers
 
 if elb_load_balancer?
   node.set[:app_restart][:elb_load_balancer] = elb_load_balancer if elb_load_balancer && !node[:app_restart][:elb_load_balancer]
+
+  cookbook_file "#{node[:app_restart][:bin_dir]}/elb_manager.rb" do
+    source 'elb_manager.rb'
+    mode '755'
+  end
 else
   node.set[:app_restart][:load_balancer_ip] = load_balancer[:private_ip] if load_balancer && !node[:app_restart][:load_balancer_ip]
 end
@@ -33,4 +38,3 @@ template "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:restart_bin]}" d
   user node[:rolling_restart][:user] || 'root'
   group node[:rolling_restart][:group] || 'root'
 end
-
