@@ -31,6 +31,21 @@ class ELBManager
   private
   def register_instance
     client.register_instances_with_load_balancer(elb_instance_params)
+    raise "Instance #{@instance_id} is not ready" unless instance_ready?
+  end
+
+  private
+  def instance_ready?
+    60.times do |i|
+      elb_state = client.describe_instance_health(@elb_name).to_h
+      instance = elb_state[:instance_states].select{ |instance| instance[:instance_id] == @instance_id }[0]
+      instance_state = instance[:state]
+      if instance_state == 'InService'
+        return true
+      elsif i > 59
+        return false
+      end
+    end
   end
 
   private
