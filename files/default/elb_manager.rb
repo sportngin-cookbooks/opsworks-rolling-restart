@@ -36,16 +36,15 @@ class ELBManager
 
   private
   def instance_ready?
-    60.times do |i|
+    60.times do
       elb_state = client.describe_instance_health(@elb_name).to_h
       instance = elb_state[:instance_states].select{ |instance| instance[:instance_id] == @instance_id }[0]
       instance_state = instance[:state]
       if instance_state == 'InService'
         return true
-      elsif i > 59
-        return false
       end
     end
+    false
   end
 
   private
