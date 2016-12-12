@@ -18,7 +18,7 @@ default[:app_restart][:restart_bin] = 'app-restart'
 default[:app_restart][:restart_template] = 'app-restart.sh.erb'
 
 if node[:rolling_restart][:load_balancer_type] == 'elb'
-  default[:external_load_balancer] = true
+  normal[:external_load_balancer] = true
 
   default[:app_restart][:add_bin] = 'elb-add'
   default[:app_restart][:add_template] = 'elb-add.sh.erb'
