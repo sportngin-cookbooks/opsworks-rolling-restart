@@ -33,7 +33,6 @@ else
   default[:app_restart][:remove_template] = 'haproxy-remove.sh.erb'
 end
 
-
 default[:app_restart][:app_running_command] = 'curl --silent --fail --max-time 5 127.0.0.1:$PORT/okcomputer'
 default[:app_restart][:finished_requests_command] = 'sleep 10'
 default[:app_restart][:app_port] = 81
