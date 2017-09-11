@@ -2,7 +2,7 @@
 
 # Usage: elb_manager.rb <region_name> <elb_name> <instance_id> <register/deregister>
 
-require 'aws-sdk'
+require 'aws-sdk-core'
 
 class ELBManager
   def initialize
