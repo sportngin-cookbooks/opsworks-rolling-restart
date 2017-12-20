@@ -4,34 +4,55 @@ module RollingRestart
       node[:opsworks]
     end
 
-    def app_instances
+    # Returns instance data as a hash of instances where the instance hostname is the key, and a hash of data is the value:
+    #   { hostname1: { key1: value, key2: value },
+    #     hostname2: { key1: value, key2: value },
+    #     hostname3: { key1: value, key2: value },
+    #   }
+    def make_hash(instances)
       if chef_11?
-        node[:opsworks][:layers].map { |layer_name, layer_attrs|
-          layer_attrs[:instances] if layer_name.to_s.include?("app")
-        }.compact.flatten(1).reduce(&:merge) # Flatten down the list of instances to a hash of { hostname: instance_data }
+        instances.compact.flatten(1).reduce(&:merge)
       else
-        app_layer = search("aws_opsworks_layer").select{ |l| l['shortname'].include?("app") }.first
-        layer_id = app_layer['layer_id']
-        instances = search("aws_opsworks_instance").select{ |i| i['layer_ids'].include?(layer_id) }.compact.flatten(1).reduce(&:merge)
+        instances_hash = {}
+
+        instances.each do |instance|
+          instances_hash["#{instance[:hostname]}"] = instance
+        end
+
+        instances_hash
       end
     end
 
-    def instances
+    def app_instances
       if chef_11?
-        node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] }.compact.flatten(1).reduce(&:merge)
+        instances = node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] if layer_name.to_s.include?("app") }
+      else
+        app_layer = search("aws_opsworks_layer").select{ |l| l[:shortname].include?("app") }.first
+        layer_id = app_layer['layer_id']
+        instances = search("aws_opsworks_instance").select{ |i| i[:layer_ids].include?(layer_id) }
+      end
+
+      make_hash(instances)
+    end
+
+    def get_instances
+      if chef_11?
+        instances = node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] }
       else
         instances = search("aws_opsworks_instance")
       end
+
+      make_hash(instances)
     end
 
     def load_balancer
       if chef_11?
-        instances.detect{ |hostname, data|
+        get_instances.detect{ |hostname, data|
           data[:elastic_ip] && !data[:elastic_ip].empty?
         }.last
       else
-        instances.detect{ |hostname, data|
-          data['elastic_ip'] != "null"
+        get_instances.detect{ |hostname, data|
+          data[:elastic_ip] != "null"
         }.last
       end
     end
