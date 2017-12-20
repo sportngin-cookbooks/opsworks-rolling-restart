@@ -1,13 +1,23 @@
 module RollingRestart
   module Helpers
     def app_instances
-      node[:opsworks][:layers].map { |layer_name, layer_attrs|
-        layer_attrs[:instances] if layer_name.to_s.include?("app")
-      }.compact.flatten(1).reduce(&:merge) # Flatten down the list of instances to a hash of { hostname: instance_data }
+      if node[:opsworks]
+        node[:opsworks][:layers].map { |layer_name, layer_attrs|
+          layer_attrs[:instances] if layer_name.to_s.include?("app")
+        }.compact.flatten(1).reduce(&:merge) # Flatten down the list of instances to a hash of { hostname: instance_data }
+      else
+        app_layer = search("aws_opsworks_layer").select{ |l| l['shortname'].include?("app") }
+        layer_id = app_layer['layer_id']
+        instances = search("aws_opsworks_instance").select{ |i| i['layer_ids'].include?(layer_id) }.compact.flatten(1).reduce(&:merge)
+      end
     end
 
     def instances
-      node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] }.compact.flatten(1).reduce(&:merge)
+      if node[:opsworks]
+        node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] }.compact.flatten(1).reduce(&:merge)
+      else
+        instances = search("aws_opsworks_instance")
+      end
     end
 
     def load_balancer
@@ -17,7 +27,11 @@ module RollingRestart
     end
 
     def elb_load_balancer
-      node[:opsworks][:stack][:'elb-load-balancers'].first
+      if node[:opsworks]
+        node[:opsworks][:stack][:'elb-load-balancers'].first
+      else
+        search("aws_opsworks_elastic_load_balancer").first
+      end
     end
 
     def elb_load_balancer?
