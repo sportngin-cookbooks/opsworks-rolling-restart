@@ -73,7 +73,7 @@ module RollingRestart
       if chef_11?
         node[:opsworks][:instance][:region]
       else
-        search("aws_opsworks_instance", "self:true").first(:availability_zone).chop
+        search("aws_opsworks_instance", "self:true").first[:availability_zone].chop
       end
     end
   end
