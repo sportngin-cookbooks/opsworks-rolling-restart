@@ -4,14 +4,5 @@ function say_loudly {
   echo "================ $@ ================"
 }
 
-function get_region {
-  if [ <%= node[:opsworks] %> ]; then
-    region=<%= node[:opsworks][:instance][:region] %>
-  else
-    region=<%= search("aws_opsworks_instance", "self:true").first['availability_zone'].chop %>
-  fi
-}
-
-get_region
 say_loudly "ADDING <%= node[:hostname] %> TO ELB: <%= node[:app_restart][:elb_load_balancer][:name] %>"
-<%= node[:app_restart][:bin_dir] %>/elb_manager.rb $region <%= node[:app_restart][:elb_load_balancer][:name] %> <%= node[:ec2][:instance_id] %> register
+<%= node[:app_restart][:bin_dir] %>/elb_manager.rb $1 <%= node[:app_restart][:elb_load_balancer][:name] %> <%= node[:ec2][:instance_id] %> register

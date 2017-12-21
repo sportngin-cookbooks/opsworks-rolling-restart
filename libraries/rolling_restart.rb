@@ -68,5 +68,13 @@ module RollingRestart
     def elb_load_balancer?
       node[:rolling_restart][:load_balancer_type] == 'elb'
     end
+
+    def get_region
+      if chef_11?
+        node[:opsworks][:instance][:region]
+      else
+        search("aws_opsworks_instance", "self:true").first(:availability_zone).chop
+      end
+    end
   end
 end
