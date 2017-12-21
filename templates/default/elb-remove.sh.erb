@@ -4,5 +4,5 @@ function say_loudly {
   echo "================ $@ ================"
 }
 
-say_loudly "REMOVING <%= node[:hostname] %> FROM ELB: <%= node[:app_restart][:elb_load_balancer][:name] %>"
-<%= node[:app_restart][:bin_dir] %>/elb_manager.rb $1 <%= node[:app_restart][:elb_load_balancer][:name] %> <%= node[:ec2][:instance_id] %> deregister
+say_loudly "REMOVING <%= @node[:hostname] %> FROM ELB: <%= @node[:app_restart][:elb_load_balancer][:name] %>"
+<%= @node[:app_restart][:bin_dir] %>/elb_manager.rb @region <%= @node[:app_restart][:elb_load_balancer][:name] %> <%= @node[:ec2][:instance_id] %> deregister

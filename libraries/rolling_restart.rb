@@ -69,7 +69,7 @@ module RollingRestart
       node[:rolling_restart][:load_balancer_type] == 'elb'
     end
 
-    def get_region
+    def get_instance_region
       if chef_11?
         node[:opsworks][:instance][:region]
       else
