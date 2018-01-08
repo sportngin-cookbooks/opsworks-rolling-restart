@@ -2,6 +2,7 @@ extend RollingRestart::Helpers
 
 if elb_load_balancer?
   node.set[:app_restart][:elb_load_balancer_name] = elb_load_balancer_name if elb_load_balancer_name && !node[:app_restart][:elb_load_balancer_name]
+  
   gem_package 'aws-sdk-core' do
     version '2.10'
   end
