@@ -23,23 +23,23 @@ function app_running {
 }
 
 <% if @app_ready_command %>
-  function app_ready {
-    <%= @app_ready_command %>
-  }
-<% end %>
+function app_ready {
+  <%= @app_ready_command %>
+}
 
+<% end %>
 <% if @before_command %>
-  function before_command {
-    <%= @before_command %>
-  }
-<% end %>
+function before_command {
+  <%= @before_command %>
+}
 
+<% end %>
 <% if @after_command %>
-  function after_command {
-    <%= @after_command %>
-  }
-<% end %>
+function after_command {
+  <%= @after_command %>
+}
 
+<% end %>
 # Wait until the app is running
 function app_up {
   # Give the app *at least* a minute to boot
@@ -63,10 +63,10 @@ finish_requests
 
 # Restart the application
 say_loudly "ATTEMPTING to RESTART <%= node[:hostname] %>"
-<%= @restart_command %> || die_loudly "RESTART FAILED 1 <%= node[:hostname] %>"
+<%= @restart_command %> || die_loudly "RESTART FAILED <%= node[:hostname] %>"
 
 # Wait for the app to come back up or fail the restart
-app_up || die_loudly "RESTART FAILED 2 <%= node[:hostname] %>"
+app_up || die_loudly "RESTART FAILED <%= node[:hostname] %>"
 say_loudly "RESTART COMPLETE <%= node[:hostname] %>"
 
 # Add Instance back into the load balancer
