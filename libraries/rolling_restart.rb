@@ -28,7 +28,7 @@ module RollingRestart
         instances = node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] if layer_name.to_s.include?("app") }
       else
         app_layer = search("aws_opsworks_layer").select{ |l| l[:shortname].include?("app") }.first
-        layer_id = app_layer['layer_id']
+        layer_id = app_layer[:layer_id]
         instances = search("aws_opsworks_instance").select{ |i| i[:layer_ids].include?(layer_id) }
       end
 
