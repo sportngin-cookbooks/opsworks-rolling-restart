@@ -57,11 +57,11 @@ module RollingRestart
       end
     end
 
-    def elb_load_balancer
+    def elb_load_balancer_name
       if chef_11?
-        node[:opsworks][:stack][:'elb-load-balancers'].first
+        node[:opsworks][:stack][:'elb-load-balancers'].first[:name]
       else
-        search("aws_opsworks_elastic_load_balancer").first
+        search("aws_opsworks_elastic_load_balancer").first[:elastic_load_balancer_name]
       end
     end
 
