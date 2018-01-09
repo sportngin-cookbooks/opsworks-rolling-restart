@@ -5,7 +5,4 @@ function say_loudly {
 }
 
 say_loudly "REMOVING <%= @node[:hostname] %> FROM ELB: <%= @node[:app_restart][:elb_load_balancer_name] %>"
-
-say_loudly "REMOVING WITH REGION: <%= @region %>"
-
 <%= @node[:app_restart][:bin_dir] %>/elb_manager.rb @region <%= @node[:app_restart][:elb_load_balancer_name] %> <%= @node[:ec2][:instance_id] %> deregister
