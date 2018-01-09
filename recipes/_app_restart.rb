@@ -2,7 +2,7 @@ extend RollingRestart::Helpers
 
 if elb_load_balancer?
   node.set[:app_restart][:elb_load_balancer_name] = elb_load_balancer_name if elb_load_balancer_name && !node[:app_restart][:elb_load_balancer_name]
-  
+
   gem_package 'aws-sdk-core' do
     version '2.10'
   end
@@ -16,7 +16,6 @@ else
 end
 
 region = get_instance_region
-
 
 template "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:remove_bin]}" do
   source node[:app_restart][:remove_template]
