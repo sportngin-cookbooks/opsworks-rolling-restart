@@ -10,7 +10,7 @@ default[:rolling_restart][:timeout] = 1800
 default[:rolling_restart][:load_balancer_type] = 'haproxy'
 
 default[:app_restart][:load_balancer_ip] = nil
-default[:app_restart][:elb_load_balancer] = nil
+default[:app_restart][:elb_load_balancer_name] = nil
 
 default[:app_restart][:bin_dir] = '/usr/local/bin'
 
