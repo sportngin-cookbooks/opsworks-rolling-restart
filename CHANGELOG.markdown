@@ -1,3 +1,8 @@
+#### 2018.01.17.17.02
+* Filter out instances that are not currently online when configuring
+
+  > Emma Sax: : https://github.com/sportngin-cookbooks/opsworks-rolling-restart/pull/20
+
 #### 2018.01.11.13.48
 * Make this cookbook compatible with Chef 12
 
