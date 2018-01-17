@@ -29,7 +29,7 @@ module RollingRestart
       else
         app_layer = search("aws_opsworks_layer").select{ |l| l[:shortname].include?("app") }.first
         layer_id = app_layer[:layer_id]
-        instances = search("aws_opsworks_instance").select{ |i| i[:layer_ids].include?(layer_id) }
+        instances = search("aws_opsworks_instance").select{ |i| (i[:layer_ids].include?(layer_id)) && (i[:status] == "online") }
       end
 
       make_hash(instances)
