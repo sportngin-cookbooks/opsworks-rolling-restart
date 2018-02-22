@@ -1,15 +1,16 @@
 #!/bin/bash
 RETRIES=<%= @retries %>
 PORT=<%= @app_port %>
+LOG_CMD="logger -t rolling-restart"
 
 # FAILURE TIME TO DIE
 function die_loudly {
-  echo "**************** $@ ****************"
+  echo "**************** $(date --rfc-3339=s) $@ ****************" | tee >($LOG_CMD)
   exit 1
 }
 
 function say_loudly {
-  echo "================ $@ ================"
+  echo "================ $(date --rfc-3339=s) $@ ================" | tee >($LOG_CMD)
 }
 
 # Let the app server finish any open requests
