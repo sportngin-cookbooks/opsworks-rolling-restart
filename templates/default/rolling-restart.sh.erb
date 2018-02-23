@@ -23,15 +23,15 @@ function after_command {
 }
 
 <% end %>
-<%= "before_command" if @before_restart_command %>
+(<%= "before_command" if @before_restart_command %>) | tee >($LOG_CMD)
 
 instances=(<%= @ip_addresses.join(' ') %>)
 instance_num=1
 for i in ${instances[@]};do
   say_loudly "Starting Restart $instance_num of ${#instances[@]}"
-  sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die_loudly "RESTART FAILED ON $i"
+  (sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die_loudly "RESTART FAILED ON $i") | tee >($LOG_CMD)
   say_loudly "Finished Restart $instance_num of ${#instances[@]}"
   ((instance_num++))
 done
 
-<%= "after_command" if @after_restart_command %>
+(<%= "after_command" if @after_restart_command %>) | tee >($LOG_CMD)
