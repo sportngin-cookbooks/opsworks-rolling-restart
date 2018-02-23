@@ -23,7 +23,7 @@ function after_command {
 }
 
 <% end %>
-(<%= "before_command" if @before_restart_command %>) | tee >($LOG_CMD)
+<%= "before_command" if @before_restart_command %>
 
 instances=(<%= @ip_addresses.join(' ') %>)
 instance_num=1
@@ -34,4 +34,4 @@ for i in ${instances[@]};do
   ((instance_num++))
 done
 
-(<%= "after_command" if @after_restart_command %>) | tee >($LOG_CMD)
+<%= "after_command" if @after_restart_command %>
