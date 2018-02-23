@@ -1,7 +1,8 @@
 #!/bin/bash
 
+LOG_CMD="logger -t rolling-restart"
 function say_loudly {
-  echo "================ $@ ================"
+  echo "================ $(date --rfc-3339=s) $@ ================"| tee >($LOG_CMD)
 }
 
 say_loudly "REMOVING <%= @node[:hostname] %> FROM LB: <%= @node[:app_restart][:load_balancer_ip] %>"

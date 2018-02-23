@@ -1,13 +1,14 @@
 #!/bin/bash
 
+LOG_CMD="logger -t rolling-restart"
 # FAILURE TIME TO DIE
 function die_loudly {
-  echo "**************** $@ ****************"
+  echo "**************** $(date --rfc-3339=s) $@ ****************"| tee >($LOG_CMD)
   exit 1
 }
 
 function say_loudly {
-  echo "================ $@ ================"
+  echo "================ $(date --rfc-3339=s) $@ ================"| tee >($LOG_CMD)
 }
 
 <% if @before_restart_command %>
@@ -28,7 +29,7 @@ instances=(<%= @ip_addresses.join(' ') %>)
 instance_num=1
 for i in ${instances[@]};do
   say_loudly "Starting Restart $instance_num of ${#instances[@]}"
-  sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die_loudly "RESTART FAILED ON $i"
+  (sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die_loudly "RESTART FAILED ON $i") | tee >($LOG_CMD)
   say_loudly "Finished Restart $instance_num of ${#instances[@]}"
   ((instance_num++))
 done
