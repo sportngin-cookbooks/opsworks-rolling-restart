@@ -1,0 +1,15 @@
+#!/bin/bash
+
+LOG_CMD="logger -t rolling-restart"
+function say_loudly {
+  echo "================ $(date --rfc-3339=s) $@ ================"| tee >($LOG_CMD)
+}
+
+export new_state=drain
+
+export socket=/tmp/haproxy.sock
+export haproxy_current_server_state="echo \"-- Current State of <%= @node[:hostname] %> --\"; echo \"show stat -1 4 -1 \"| sudo nc -U $socket | awk -F, -vhostname=<%= @node[:hostname] %> 'match(\$0, hostname) {print \$1,\$2,\$18}'"
+export haproxy_change_server_state="echo \"set server app_servers/<%= @node[:hostname] %> state $new_state; set server app_servers_ssl/<%= @node[:hostname] %> state $new_state\" | sudo nc -U $socket"
+
+say_loudly "SETTING STATE OF <%= @node[:hostname] %> TO $new_state ON LB: <%= @node[:app_restart][:load_balancer_ip] %>"
+sudo -u <%= @node[:rolling_restart][:ssh][:user] %> ssh <%= @node[:rolling_restart][:ssh][:user] %>@<%= @node[:app_restart][:load_balancer_ip] %> "$haproxy_current_server_state; $haproxy_change_server_state; $haproxy_current_server_state"
