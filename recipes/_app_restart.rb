@@ -19,7 +19,7 @@ region = get_instance_region
 
 template "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:remove_bin]}" do
   source node[:app_restart][:remove_template]
-  cookbook node[:rolling_restart][:cookbook]
+  cookbook node[:app_restart][:remove_template_cookbook]
   variables(node: node[:app_restart], region: region)
   mode '0755'
   user node[:rolling_restart][:user] || 'root'
@@ -28,7 +28,7 @@ end
 
 template "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:add_bin]}" do
   source node[:app_restart][:add_template]
-  cookbook node[:rolling_restart][:cookbook]
+  cookbook node[:app_restart][:add_template_cookbook]
   variables(node: node[:app_restart], region: region)
   mode '0755'
   user node[:rolling_restart][:user] || 'root'
@@ -37,7 +37,7 @@ end
 
 template "#{node[:app_restart][:bin_dir]}/#{node[:app_restart][:restart_bin]}" do
   source node[:app_restart][:restart_template]
-  cookbook node[:rolling_restart][:cookbook]
+  cookbook node[:app_restart][:restart_template_cookbook]
   variables(node[:app_restart])
   mode '0755'
   user node[:rolling_restart][:user] || 'root'
