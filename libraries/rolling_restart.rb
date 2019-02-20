@@ -25,7 +25,7 @@ module RollingRestart
 
     def app_instances
       if chef_11?
-        instances = app_layers_chef_11.map{ |layer, layer_attrs| layer_attrs[:instances] }.inject(&:merge)
+        instances = app_layers_chef_11.map{ |layer, layer_attrs| layer_attrs[:instances] }
       else
         app_layer = app_layers.first
         layer_id = app_layer[:layer_id]
