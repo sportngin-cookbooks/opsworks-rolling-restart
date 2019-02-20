@@ -25,14 +25,30 @@ module RollingRestart
 
     def app_instances
       if chef_11?
-        instances = node[:opsworks][:layers].map { |layer_name, layer_attrs| layer_attrs[:instances] if layer_name.to_s.include?("app") }
+        instances = app_layers_chef_11.map{ |layer, attrs| instances_for_layer(attrs) }.inject(&:merge)
       else
-        app_layer = search("aws_opsworks_layer").select{ |l| l[:shortname].include?("app") }.first
+        app_layer = app_layers.first
         layer_id = app_layer[:layer_id]
         instances = search("aws_opsworks_instance").select{ |i| (i[:layer_ids].include?(layer_id)) && (i[:status] == "online") }
       end
 
       make_hash(instances)
+    end
+
+    def opsworks_layer_include_override
+      node[:rolling_restart][:opsworks_layer_include_override] || []
+    end
+
+    def app_layers_chef_11
+      layers = node[:opsworks][:layers]
+      return layers.select{|layer, attrs| layer.to_s.include?("app") } if opsworks_layer_include_override.empty?
+      layers.select{|layer, attrs| opsworks_layer_include_override.include?(layer.to_s) }
+    end
+
+    def app_layers
+      layers = search("aws_opsworks_layer")
+      return layers.select{ |l| l[:shortname].include?("app") }.first if opsworks_layer_include_override.empty?
+      layers.select{|l| opsworks_layer_include_override.include?(l[:shortname]) }
     end
 
     def get_instances

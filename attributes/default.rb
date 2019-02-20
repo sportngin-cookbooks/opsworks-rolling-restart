@@ -8,6 +8,7 @@ default[:rolling_restart][:template] = 'rolling-restart.sh.erb'
 default[:rolling_restart][:bin] = 'rolling-restart'
 default[:rolling_restart][:timeout] = 1800
 default[:rolling_restart][:load_balancer_type] = 'haproxy'
+default[:rolling_restart][:opsworks_layer_include_override] = []
 
 default[:app_restart][:load_balancer_ip] = nil
 default[:app_restart][:elb_load_balancer_name] = nil
