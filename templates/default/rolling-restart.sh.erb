@@ -30,7 +30,11 @@ instance_num=1
 for i in ${instances[@]};do
   say_loudly "Starting Restart $instance_num of ${#instances[@]}"
   (sudo -u <%= @user %> ssh <%= @user %>@$i <%= @app_restart_command %> || die_loudly "RESTART FAILED ON $i") | tee >($LOG_CMD)
-  say_loudly "Finished Restart $instance_num of ${#instances[@]}"
+  if [[ ${PIPESTATUS[0]} -eq 0 ]] ; then
+    say_loudly "Finished Restart $instance_num of ${#instances[@]}"
+  else
+    die_loudly "Restart Failed"
+  fi
   ((instance_num++))
 done
 
