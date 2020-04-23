@@ -17,104 +17,65 @@ class ELBManager
   end
 
   def run
-    case @cmd
+    instance_registrar(@cmd)
+  end
+
+  private def instance_registrar(task)
+    registrar_params = {
+      verb: task,
+      function: nil,
+      type: nil
+    }
+    # Build appropriate params for (de)registration
+    case task.downcase
     when 'register'
-      register_instance
+      case @elb_name.downcase
+      when 'elb'
+        registrar_params[:function] = 'register_instances_with_load_balancer'
+        registrar_params[:type] = 'instance'
+      when 'alb', 'nlb'
+        registrar_params[:function] = 'register_targets'
+        registrar_params[:type] = 'target'
+      end
     when 'deregister'
-      deregister_instance
+      case @elb_name.downcase
+      when 'elb'
+        registrar_params[:function] = 'deregister_instances_from_load_balancer'
+        registrar_params[:type] = 'instance'
+      when 'alb', 'nlb'
+        registrar_params[:function] = 'deregister_targets'
+        registrar_params[:type] = 'target'
+      end
     else
-      puts "Unable to parse command #{@cmd}"
+      raise ArgumentError.new("Unsupported task type. Only the following tasks are supported: [register, deregister]")
     end
-  end
 
-  private def deregister_instance
     begin
-      case @elb_name.downcase
-      when 'elb'
-        client.deregister_instances_from_load_balancer(elb_instance_params)
-        client.wait_until(:instance_deregistered, elb_instance_params) do |w|
-          # disable max attempts
-          w.max_attempts = nil
+      threads = []
+      elb_instance_params.each do |elb_instance_param|
+        threads << Thread.new {
+          # Build the following structure: client.deregister_targets(elb_instance_param)
+          client.send registrar_params[:function].to_sym, elb_instance_param
+          # Build the following structure: client.wait_until(:target_deregistered, elb_instance_param) do |w|
+          client.wait_until("#{registrar_params[:type]}_#{task}".to_sym, elb_instance_param) do |w|
+            # disable max attempts
+            w.max_attempts = nil
 
-          w.before_attempt do |attempts|
-            chef::log.info("waiting for #{@instance_id} to be deregistered (attempt #{attempts + 1})")
-          end
-
-          w.delay = 15
-          w.before_wait do
-            throw :failure if time.now > timeout_at
-          end
-        end
-      when 'alb', 'nlb'
-        threads = []
-        elb_instance_params.each do |elb_instance_param|
-          threads << Thread.new {
-            client.deregister_targets(elb_instance_param)
-            client.wait_until(:target_deregistered, elb_instance_param) do |w|
-              # disable max attempts
-              w.max_attempts = nil
-
-              w.before_attempt do |attempts|
-                chef::log.info("waiting for #{@instance_id} to be deregistered (attempt #{attempts + 1})")
-              end
-
-              w.delay = 15
-              w.before_wait do
-                throw :failure if time.now > timeout_at
-              end
+            w.before_attempt do |attempts|
+              chef::log.info("waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
             end
-          }
-        end
-        threads.each(&:join)
+
+            w.delay = 15
+            w.before_wait do
+              throw :failure if time.now > timeout_at
+            end
+          end
+        }
       end
+      threads.each(&:join)
     rescue Aws::Waiters::Errors::WaiterFailed
       raise "max # of attempts reached. deregistration of #{@instance_id} from #{@elb_name} failed."
-    end
-  end
-
-  private def register_instance
-    begin
-      case @elb_name.downcase
-      when 'elb'
-        client.register_instances_with_load_balancer(elb_instance_params)
-        client.wait_until(:instance_in_service, elb_instance_params) do |w|
-          # disable max attempts
-          w.max_attempts = nil
-
-          w.before_attempt do |attempts|
-            chef::log.info("waiting for #{@instance_id} to be in service (attempt #{attempts + 1})")
-          end
-
-          w.delay = 15
-          w.before_wait do
-            throw :failure if time.now > timeout_at
-          end
-        end
-      when 'alb', 'nlb'
-        threads = []
-        elb_instance_params.each do |elb_instance_param|
-          threads << Thread.new {
-            client.deregister_targets(elb_instance_param)
-            client.wait_until(:target_deregistered, elb_instance_param) do |w|
-              # disable max attempts
-              w.max_attempts = nil
-
-              w.before_attempt do |attempts|
-                chef::log.info("waiting for #{@instance_id} to in service (attempt #{attempts + 1})")
-              end
-
-              w.delay = 15
-              w.before_wait do
-                throw :failure if time.now > timeout_at
-              end
-            end
-          }
-        end
-        threads.each(&:join)
-      end
-    rescue Aws::Waiters::Errors::WaiterFailed
-      raise "max # of attempts reached. deregistration of #{@instance_id} from #{@elb_name} failed."
-    end
+    end   
   end
 
   private def target_group_hash(target_group, target)
@@ -131,10 +92,10 @@ class ELBManager
   private def elb_instance_params
     case @elb_name.downcase
     when 'elb'
-      @elb_instance_params ||= {
+      @elb_instance_params ||= [{
         load_balancer_name: @elb_name,
         instances: [{ instance_id: @instance_id }]
-      }
+      }]
     when 'nlb', 'alb'
       # An arr of target_group_hash structures
       if @elb_instance_params
