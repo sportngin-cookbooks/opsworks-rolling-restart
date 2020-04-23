@@ -5,5 +5,11 @@ function say_loudly {
   echo "================ $(date --rfc-3339=s) $@ ================"| tee >($LOG_CMD)
 }
 
-say_loudly "REMOVING <%= @node[:hostname] %> FROM ELB: <%= @node[:app_restart][:elb_load_balancer_name] %>"
-<%= @node[:app_restart][:bin_dir] %>/elb_manager.rb <%= @region %> <%= @node[:app_restart][:elb_load_balancer_name] %> <%= @node[:ec2][:instance_id] %> deregister
+<% all_lbs = @node[:rolling_restart][:additional_load_balancers] %>
+<% all_lbs[@node[:app_restart][:elb_load_balancer_name]] = @node[:rolling_restart][:load_balancer_type] %>
+<% all_lbs.each do |name, type| %>
+  say_loudly "REMOVING <%= @node[:hostname] %> FROM <%= type.upcase %>: <%= name %>" &
+  <%= @node[:app_restart][:bin_dir] %>/elb_manager.rb <%= @region %> <%= type %> <%= name %> <%= @node[:ec2][:instance_id] %> deregister &
+<% end %>
+# Wait for the previous processes to finish
+wait
