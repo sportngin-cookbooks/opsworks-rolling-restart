@@ -102,8 +102,11 @@ class ELBManager
       if @elb_instance_params
         @elb_instance_params
       else
+        resp = client.describe_load_balancers(
+          names: [@elb_name]
+        )
         resp = client.describe_target_groups(
-          load_balancer_arn: @elb_name
+          load_balancer_arn: resp.first.load_balancer_arn
         )
         @elb_instance_params = resp.target_groups.map do |tg| 
           target_group_hash(tg.target_group_arn, @instance_id)
