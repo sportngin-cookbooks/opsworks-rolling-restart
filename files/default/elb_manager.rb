@@ -74,7 +74,8 @@ class ELBManager
       end
       threads.each(&:join)
     rescue Aws::Waiters::Errors::WaiterFailed
-      raise "max # of attempts reached. deregistration of #{@instance_id} from #{@elb_name} failed."
+      # Convert '(de)register' to a noun
+      raise "max # of attempts reached. #{task[0...-2]}ration of #{@instance_id} from #{@elb_name} failed."
     end   
   end
 
