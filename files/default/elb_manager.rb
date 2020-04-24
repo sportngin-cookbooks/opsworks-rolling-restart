@@ -20,7 +20,9 @@ class ELBManager
     instance_registrar(@cmd)
   end
 
-  private def instance_registrar(task)
+  private
+
+  def instance_registrar(task)
     registrar_params = {
       verb: task,
       function: nil,
@@ -79,7 +81,7 @@ class ELBManager
     end   
   end
 
-  private def target_group_hash(target_group, target)
+  def target_group_hash(target_group, target)
     {
       target_group_arn: "#{target_group}",
       targets: [
@@ -90,7 +92,7 @@ class ELBManager
     }
   end
 
-  private def elb_instance_params
+  def elb_instance_params
     case @elb_name.downcase
     when 'elb'
       @elb_instance_params ||= [{
@@ -115,7 +117,7 @@ class ELBManager
     end
   end
 
-  private def client
+  def client
     case @elb_name.downcase
     when 'elb'
       @client ||= Aws::ElasticLoadBalancing::Client.new(region: @region_name)
