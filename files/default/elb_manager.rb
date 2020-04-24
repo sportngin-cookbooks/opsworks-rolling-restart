@@ -3,6 +3,8 @@
 # Usage: elb_manager.rb <region_name> <elb_type> <elb_name> <instance_id> <register/deregister> <registration_timeout>
 
 require 'aws-sdk-core'
+require 'aws-sdk-elasticloadbalancing'
+require 'aws-sdk-elasticloadbalancingv2'
 
 class ELBManager
   def initialize
@@ -93,7 +95,7 @@ class ELBManager
   end
 
   def elb_instance_params
-    case @elb_name.downcase
+    case @elb_type.downcase
     when 'elb'
       @elb_instance_params ||= [{
         load_balancer_name: @elb_name,
@@ -101,24 +103,23 @@ class ELBManager
       }]
     when 'nlb', 'alb'
       # An arr of target_group_hash structures
-      if @elb_instance_params
-        @elb_instance_params
-      else
+      unless @elb_instance_params
         resp = client.describe_load_balancers(
           names: [@elb_name]
         )
         resp = client.describe_target_groups(
-          load_balancer_arn: resp.first.load_balancer_arn
+          load_balancer_arn: resp.load_balancers.first.load_balancer_arn
         )
         @elb_instance_params = resp.target_groups.map do |tg| 
           target_group_hash(tg.target_group_arn, @instance_id)
         end
       end
     end
+    @elb_instance_params
   end
 
   def client
-    case @elb_name.downcase
+    case @elb_type.downcase
     when 'elb'
       @client ||= Aws::ElasticLoadBalancing::Client.new(region: @region_name)
     when 'nlb', 'alb'
