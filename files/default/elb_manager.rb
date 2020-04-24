@@ -24,7 +24,7 @@ class ELBManager
 
   private
 
-  def instance_registrar(task)
+  def registrar_params_builder(task)
     registrar_params = {
       function: nil,
       type: nil,
@@ -49,6 +49,12 @@ class ELBManager
       raise ArgumentError.new("Unsupported task type. Only the following tasks are supported: [register, deregister]")
     end
 
+    registrar_params
+  end
+
+  def instance_registrar(task)
+    registrar_params = registrar_params_builder(task)
+
     begin
       threads = []
       elb_instance_params.each do |elb_instance_param|
@@ -61,7 +67,8 @@ class ELBManager
             w.max_attempts = nil
 
             w.before_attempt do |attempts|
-              chef::log.info("waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
+              # chef::log.info("waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
+              puts ("waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
             end
 
             w.delay = 15
