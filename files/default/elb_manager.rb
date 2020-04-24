@@ -26,35 +26,25 @@ class ELBManager
 
   def instance_registrar(task)
     registrar_params = {
-      verb: task,
       function: nil,
       type: nil,
       waiter_name: nil,
     }
     # Build appropriate params for (de)registration
+    case @elb_type.downcase
+    when 'elb'
+      registrar_params[:type] = 'instance'
+      registrar_params[:function] = "#{task}_#{registrar_params[:type]}s_with_load_balancer"
+    when 'alb', 'nlb'
+      registrar_params[:type] = 'target'
+      registrar_params[:function] = "#{task}_#{registrar_params[:type]}s"
+    end
+
     case task.downcase
     when 'register'
-      case @elb_type.downcase
-      when 'elb'
-        registrar_params[:function] = 'register_instances_with_load_balancer'
-        registrar_params[:type] = 'instance'
-        registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
-      when 'alb', 'nlb'
-        registrar_params[:function] = 'register_targets'
-        registrar_params[:type] = 'target'
-        registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
-      end
+      registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
     when 'deregister'
-      case @elb_type.downcase
-      when 'elb'
-        registrar_params[:function] = 'deregister_instances_from_load_balancer'
-        registrar_params[:type] = 'instance'
-        registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{task}ed"
-      when 'alb', 'nlb'
-        registrar_params[:function] = 'deregister_targets'
-        registrar_params[:type] = 'target'
-        registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{task}ed"
-      end
+      registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{task}ed"
     else
       raise ArgumentError.new("Unsupported task type. Only the following tasks are supported: [register, deregister]")
     end
