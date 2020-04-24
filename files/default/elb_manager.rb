@@ -14,7 +14,7 @@ class ELBManager
     @instance_id = ARGV[3]
     @cmd = ARGV[4]
     @timeout = ARGV[5] || 300
-    timeout_at = Time.now + @timeout
+    @timeout_at = Time.now + @timeout
     Thread.abort_on_exception
   end
 
@@ -28,27 +28,32 @@ class ELBManager
     registrar_params = {
       verb: task,
       function: nil,
-      type: nil
+      type: nil,
+      waiter_name: nil,
     }
     # Build appropriate params for (de)registration
     case task.downcase
     when 'register'
-      case @elb_name.downcase
+      case @elb_type.downcase
       when 'elb'
         registrar_params[:function] = 'register_instances_with_load_balancer'
         registrar_params[:type] = 'instance'
+        registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
       when 'alb', 'nlb'
         registrar_params[:function] = 'register_targets'
         registrar_params[:type] = 'target'
+        registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
       end
     when 'deregister'
-      case @elb_name.downcase
+      case @elb_type.downcase
       when 'elb'
         registrar_params[:function] = 'deregister_instances_from_load_balancer'
         registrar_params[:type] = 'instance'
+        registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{task}ed"
       when 'alb', 'nlb'
         registrar_params[:function] = 'deregister_targets'
         registrar_params[:type] = 'target'
+        registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{task}ed"
       end
     else
       raise ArgumentError.new("Unsupported task type. Only the following tasks are supported: [register, deregister]")
@@ -61,7 +66,7 @@ class ELBManager
           # Build the following structure: client.deregister_targets(elb_instance_param)
           client.send registrar_params[:function].to_sym, elb_instance_param
           # Build the following structure: client.wait_until(:target_deregistered, elb_instance_param) do |w|
-          client.wait_until("#{registrar_params[:type]}_#{task}".to_sym, elb_instance_param) do |w|
+          client.wait_until(registrar_params[:waiter_name].to_sym, elb_instance_param) do |w|
             # disable max attempts
             w.max_attempts = nil
 
@@ -71,7 +76,7 @@ class ELBManager
 
             w.delay = 15
             w.before_wait do
-              throw :failure if time.now > timeout_at
+              throw :failure if Time.now > @timeout_at
             end
           end
         }
