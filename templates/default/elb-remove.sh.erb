@@ -5,7 +5,7 @@ function say_loudly {
   echo "================ $(date --rfc-3339=s) $@ ================"| tee >($LOG_CMD)
 }
 
-<% all_lbs = @node[:rolling_restart][:additional_load_balancers].clone %>
+<% all_lbs = @node[:rolling_restart][:additional_load_balancers].dup %>
 <% all_lbs[@node[:app_restart][:elb_load_balancer_name]] = @node[:rolling_restart][:load_balancer_type] %>
 <% all_lbs.each do |name, type| %>
   say_loudly "REMOVING <%= @node[:hostname] %> FROM <%= type.upcase %>: <%= name %>" &
