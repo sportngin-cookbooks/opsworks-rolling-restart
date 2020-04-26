@@ -67,8 +67,7 @@ class ELBManager
             w.max_attempts = nil
 
             w.before_attempt do |attempts|
-              # chef::log.info("waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
-              puts ("waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
+              chef::log.info("#{@elb_type} #{@elb_name}: waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
             end
 
             w.delay = 15
