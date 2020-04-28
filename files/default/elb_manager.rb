@@ -16,6 +16,15 @@ class ELBManager
     @timeout = ARGV[5] || 300
     @timeout_at = Time.now + @timeout
     Thread.abort_on_exception
+
+    case @task.downcase
+    when 'register'
+      @waiter_name_suffix = "in_service"
+    when 'deregister'
+      @waiter_name_suffix = "#{@task}ed"
+    else
+      raise ArgumentError.new("Unsupported @task type. Only the following tasks are supported: [register, deregister]")
+    end
   end
 
   def run
@@ -25,48 +34,49 @@ class ELBManager
   private
 
   ##
-  # Builds a hash to make AWS SDK API calls dynamically in `instance_registrar`
-  def registrar_params_builder
-    registrar_params = {
-      function: nil,
-      type: nil,
-      waiter_name: nil,
-    }
-    # Build appropriate params for (de)registration
-    case @elb_type.downcase
-    when 'elb'
-      registrar_params[:type] = 'instance'
-      registrar_params[:function] = "#{@task}_#{registrar_params[:type]}s_with_load_balancer"
-    when 'alb', 'nlb'
-      registrar_params[:type] = 'target'
-      registrar_params[:function] = "#{@task}_#{registrar_params[:type]}s"
-    end
-
-    case @task.downcase
-    when 'register'
-      registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
-    when 'deregister'
-      registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{@task}ed"
-    else
-      raise ArgumentError.new("Unsupported @task type. Only the following @tasks are supported: [register, deregister]")
-    end
-
-    registrar_params
-  end
-
-  ##
   # (De)registers the instance from the ELB or target groups of the A/NLB
   def instance_registrar
-    registrar_params = registrar_params_builder(@task)
+    case @elb_type.downcase
+    when 'elb'
+      elb_registrar
+    when 'alb', 'nlb'
+      elbv2_registrar
+    end
+  end
 
+  def elb_registrar
+    begin
+      # Build the following structure: client.deregister_instances_with_load_balancer(elb_instance_params)
+      client.send "#{@task}_instances_with_load_balancer".to_sym, elb_instance_params
+      # Build the following structure: client.wait_until(:instance_deregistered, elb_instance_params) do |w|
+      client.wait_until("instance_#{@waiter_name_suffix}".to_sym, elb_instance_params) do |w|
+        # disable max attempts
+        w.max_attempts = nil
+
+        w.before_attempt do |attempts|
+          chef::log.info("#{@elb_type} #{@elb_name}: waiting for #{@instance_id} to be #{@task}ed (attempt #{attempts + 1})")
+        end
+
+        w.delay = 15
+        w.before_wait do
+          throw :failure if Time.now > @timeout_at
+        end
+      end
+    rescue Aws::Waiters::Errors::WaiterFailed
+      # Convert '(de)register' to a noun
+      raise "max # of attempts reached. #{@task[0...-2]}ration of #{@instance_id} from #{@elb_name} failed."
+    end
+  end
+
+  def elbv2_registrar
     begin
       threads = []
       elb_instance_params.each do |elb_instance_param|
         threads << Thread.new {
           # Build the following structure: client.deregister_targets(elb_instance_param)
-          client.send registrar_params[:function].to_sym, elb_instance_param
+          client.send "#{@task}_targets".to_sym, elb_instance_param
           # Build the following structure: client.wait_until(:target_deregistered, elb_instance_param) do |w|
-          client.wait_until(registrar_params[:waiter_name].to_sym, elb_instance_param) do |w|
+          client.wait_until("target_#{@waiter_name_suffix}".to_sym, elb_instance_param) do |w|
             # disable max attempts
             w.max_attempts = nil
 
@@ -89,6 +99,42 @@ class ELBManager
   end
 
   ##
+  # Returns an arr of hash structures for alb/nlb, or a hash structure for elb.
+  # The structure is meant to be ingested by AWS SDK functions.
+  def elb_instance_params
+    unless @elb_instance_params
+      case @elb_type.downcase
+      when 'elb'
+        elb_sdk_param_builder
+      when 'alb', 'nlb'
+        elbv2_sdk_param_builder
+      end
+    end
+
+    @elb_instance_params
+  end
+
+  def elb_sdk_param_builder
+    @elb_instance_params ||= {
+      load_balancer_name: @elb_name,
+      instances: [{ instance_id: @instance_id }]
+    }
+  end
+
+  def elbv2_sdk_param_builder
+    # An arr of target_group_hash structures
+    resp = client.describe_load_balancers(
+      names: [@elb_name]
+    )
+    resp = client.describe_target_groups(
+      load_balancer_arn: resp.load_balancers.first.load_balancer_arn
+    )
+    @elb_instance_params = resp.target_groups.map do |tg|
+      target_group_hash(tg.target_group_arn, @instance_id)
+    end
+  end
+
+  ##
   # Hash template used for `elb_instance_params` when using A/NLB
   def target_group_hash(target_group, target)
     {
@@ -99,33 +145,6 @@ class ELBManager
         }
       ]
     }
-  end
-
-  ##
-  # Returns an arr of hash structures meant to be ingested by an AWS SDK ELB
-  # instance (de)register function.
-  def elb_instance_params
-    case @elb_type.downcase
-    when 'elb'
-      @elb_instance_params ||= [{
-        load_balancer_name: @elb_name,
-        instances: [{ instance_id: @instance_id }]
-      }]
-    when 'nlb', 'alb'
-      # An arr of target_group_hash structures
-      unless @elb_instance_params
-        resp = client.describe_load_balancers(
-          names: [@elb_name]
-        )
-        resp = client.describe_target_groups(
-          load_balancer_arn: resp.load_balancers.first.load_balancer_arn
-        )
-        @elb_instance_params = resp.target_groups.map do |tg| 
-          target_group_hash(tg.target_group_arn, @instance_id)
-        end
-      end
-    end
-    @elb_instance_params
   end
 
   ##
