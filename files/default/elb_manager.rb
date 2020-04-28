@@ -12,21 +12,21 @@ class ELBManager
     @elb_type = ARGV[1]
     @elb_name = ARGV[2]
     @instance_id = ARGV[3]
-    @cmd = ARGV[4]
+    @task = ARGV[4]
     @timeout = ARGV[5] || 300
     @timeout_at = Time.now + @timeout
     Thread.abort_on_exception
   end
 
   def run
-    instance_registrar(@cmd)
+    instance_registrar
   end
 
   private
 
   ##
   # Builds a hash to make AWS SDK API calls dynamically in `instance_registrar`
-  def registrar_params_builder(task)
+  def registrar_params_builder
     registrar_params = {
       function: nil,
       type: nil,
@@ -36,19 +36,19 @@ class ELBManager
     case @elb_type.downcase
     when 'elb'
       registrar_params[:type] = 'instance'
-      registrar_params[:function] = "#{task}_#{registrar_params[:type]}s_with_load_balancer"
+      registrar_params[:function] = "#{@task}_#{registrar_params[:type]}s_with_load_balancer"
     when 'alb', 'nlb'
       registrar_params[:type] = 'target'
-      registrar_params[:function] = "#{task}_#{registrar_params[:type]}s"
+      registrar_params[:function] = "#{@task}_#{registrar_params[:type]}s"
     end
 
-    case task.downcase
+    case @task.downcase
     when 'register'
       registrar_params[:waiter_name] = "#{registrar_params[:type]}_in_service"
     when 'deregister'
-      registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{task}ed"
+      registrar_params[:waiter_name] = "#{registrar_params[:type]}_#{@task}ed"
     else
-      raise ArgumentError.new("Unsupported task type. Only the following tasks are supported: [register, deregister]")
+      raise ArgumentError.new("Unsupported @task type. Only the following @tasks are supported: [register, deregister]")
     end
 
     registrar_params
@@ -56,8 +56,8 @@ class ELBManager
 
   ##
   # (De)registers the instance from the ELB or target groups of the A/NLB
-  def instance_registrar(task)
-    registrar_params = registrar_params_builder(task)
+  def instance_registrar
+    registrar_params = registrar_params_builder(@task)
 
     begin
       threads = []
@@ -71,7 +71,7 @@ class ELBManager
             w.max_attempts = nil
 
             w.before_attempt do |attempts|
-              chef::log.info("#{@elb_type} #{@elb_name}: waiting for #{@instance_id} to be #{task}ed (attempt #{attempts + 1})")
+              chef::log.info("#{@elb_type} #{@elb_name}: waiting for #{@instance_id} to be #{@task}ed (attempt #{attempts + 1})")
             end
 
             w.delay = 15
@@ -84,7 +84,7 @@ class ELBManager
       threads.each(&:join)
     rescue Aws::Waiters::Errors::WaiterFailed
       # Convert '(de)register' to a noun
-      raise "max # of attempts reached. #{task[0...-2]}ration of #{@instance_id} from #{@elb_name} failed."
+      raise "max # of attempts reached. #{@task[0...-2]}ration of #{@instance_id} from #{@elb_name} failed."
     end   
   end
 
