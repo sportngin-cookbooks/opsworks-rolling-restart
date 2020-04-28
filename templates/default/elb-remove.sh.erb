@@ -9,7 +9,7 @@ function say_loudly {
 <% all_lbs[@node[:app_restart][:elb_load_balancer_name]] = @node[:rolling_restart][:load_balancer_type] %>
 <% all_lbs.each do |name, type| %>
   say_loudly "REMOVING <%= @node[:hostname] %> FROM <%= type.upcase %>: <%= name %>" &
-  <%= @node[:app_restart][:bin_dir] %>/elb_manager.rb <%= @region %> <%= type %> <%= name %> <%= @node[:ec2][:instance_id] %> deregister &
+  <%= @node[:app_restart][:bin_dir] %>/elb_manager.rb <%= @region %> <%= type %> <%= name %> <%= @node[:ec2][:instance_id] %> deregister <%= @node[:rolling_restart][:conn_draining_timeout] %> &
 <% end %>
 # Wait for the previous processes to finish
 wait

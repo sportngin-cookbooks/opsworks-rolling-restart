@@ -7,6 +7,7 @@ default[:rolling_restart][:bin_dir] = '/usr/local/bin'
 default[:rolling_restart][:template] = 'rolling-restart.sh.erb'
 default[:rolling_restart][:bin] = 'rolling-restart'
 default[:rolling_restart][:timeout] = 1800
+default[:rolling_restart][:conn_draining_timeout] = 400
 default[:rolling_restart][:load_balancer_type] = 'haproxy'
 # Only ELB/ALB/NLB are supported for additional lbs
 # { lb_name: lb_type }
