@@ -24,6 +24,8 @@ class ELBManager
 
   private
 
+  ##
+  # Builds a hash to make AWS SDK API calls dynamically in `instance_registrar`
   def registrar_params_builder(task)
     registrar_params = {
       function: nil,
@@ -52,6 +54,8 @@ class ELBManager
     registrar_params
   end
 
+  ##
+  # (De)registers the instance from the ELB or target groups of the A/NLB
   def instance_registrar(task)
     registrar_params = registrar_params_builder(task)
 
@@ -84,6 +88,8 @@ class ELBManager
     end   
   end
 
+  ##
+  # Hash template used for `elb_instance_params` when using A/NLB
   def target_group_hash(target_group, target)
     {
       target_group_arn: "#{target_group}",
@@ -95,6 +101,9 @@ class ELBManager
     }
   end
 
+  ##
+  # Returns an arr of hash structures meant to be ingested by an AWS SDK ELB
+  # instance (de)register function.
   def elb_instance_params
     case @elb_type.downcase
     when 'elb'
@@ -119,6 +128,8 @@ class ELBManager
     @elb_instance_params
   end
 
+  ##
+  # Returns an ELB client object
   def client
     case @elb_type.downcase
     when 'elb'
