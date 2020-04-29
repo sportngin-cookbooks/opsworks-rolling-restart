@@ -14,13 +14,12 @@ class ELBManager
     @timeout_at = Time.now + @options[:timeout]
     Thread.abort_on_exception
 
-    case @options[:task].downcase
-    when 'register'
-      @waiter_name_suffix = "in_service"
-    when 'deregister'
-      @waiter_name_suffix = "#{@options[:task]}ed"
-    else
-      raise ArgumentError.new("Unsupported task type. Only the following tasks are supported: [register, deregister]")
+    unless @options[:task].downcase.match /^(de)?register$/
+      raise ArgumentError.new("Unsupported task. Only the following tasks are supported: [register, deregister]")
+    end
+
+    unless @options[:elb_type].downcase.match /^[aen]lb$/
+      raise ArgumentError.new("Load balancer type must be one of [elb, alb, nlb]")
     end
   end
 
@@ -43,15 +42,22 @@ class ELBManager
 
   def elb_registrar
     begin
-      # Build the following structure: client.deregister_instances_with_load_balancer(elb_instance_params)
-      client.send "#{@options[:task]}_instances_with_load_balancer".to_sym, elb_instance_params
+      case @options[:task].downcase
+      when 'register'
+        waiter_name = 'instance_in_service'
+        client.register_instances_with_load_balancer(elb_instance_params)
+      when 'deregister'
+        waiter_name = 'instance_deregistered'
+        client.deregister_instances_from_load_balancer(elb_instance_params)
+      end
+
       # Build the following structure: client.wait_until(:instance_deregistered, elb_instance_params) do |w|
-      client.wait_until("instance_#{@waiter_name_suffix}".to_sym, elb_instance_params) do |w|
+      client.wait_until(waiter_name.to_sym, elb_instance_params) do |w|
         # disable max attempts
         w.max_attempts = nil
 
         w.before_attempt do |attempts|
-          chef::log.info("#{@options[:elb_type]} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})")
+          chef::log.info("#{@options[:elb_type].upcase} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})")
         end
 
         w.delay = 15
@@ -67,18 +73,28 @@ class ELBManager
 
   def elbv2_registrar
     begin
+      case @options[:task].downcase
+      when 'register'
+        task_method_name = 'register_targets'
+        waiter_name = 'target_in_service'
+      when 'deregister'
+        task_method_name = 'deregister_targets'
+        waiter_name = 'target_deregistered'
+      end
+
       threads = []
+      # Each target group operation has its own thread
       elb_instance_params.each do |elb_instance_param|
         threads << Thread.new {
           # Build the following structure: client.deregister_targets(elb_instance_param)
-          client.send "#{@options[:task]}_targets".to_sym, elb_instance_param
+          client.send task_method_name.to_sym, elb_instance_param
           # Build the following structure: client.wait_until(:target_deregistered, elb_instance_param) do |w|
-          client.wait_until("target_#{@waiter_name_suffix}".to_sym, elb_instance_param) do |w|
+          client.wait_until(waiter_name.to_sym, elb_instance_param) do |w|
             # disable max attempts
             w.max_attempts = nil
 
             w.before_attempt do |attempts|
-              chef::log.info("#{@options[:elb_type]} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})")
+              chef::log.info("#{@options[:elb_type].upcase} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})")
             end
 
             w.delay = 15
@@ -152,8 +168,6 @@ class ELBManager
       @client ||= Aws::ElasticLoadBalancing::Client.new(region: @options[:region])
     when 'nlb', 'alb'
       @client ||= Aws::ElasticLoadBalancingV2::Client.new(region: @options[:region])
-    else
-      raise ArgumentError.new("Load balancer type must be one of [elb, alb, nlb]")
     end
   end
 
@@ -177,7 +191,7 @@ class ELBManager
       opts.on("-k", "--task TASK", "Desirable action. `register` or `deregister`") do |k|
         @options[:task] = k
       end
-      opts.on("-o", "--timeout SECONDS", "Instance (de)registeration timeout") do |o|
+      opts.on("-o", "--timeout SECONDS", OptionParser::DecimalInteger, "Instance (de)registeration timeout") do |o|
         @options[:timeout] = o
       end
       opts.on("-h", "--help", "Help message") do
