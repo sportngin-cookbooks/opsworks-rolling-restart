@@ -172,7 +172,7 @@ class ELBManager
       opts.on("-r", "--region AWS_REGION", "AWS region name where the load balancer and instance live") do |r|
         @options[:region] = r
       end
-      opts.on("-t", "--type ELB_TYPE", "Type of elastic load balancer. Should be one of `elb`, `alb`, or `nlb`") do |t|
+      opts.on("-t", "--type ELB_TYPE", [:elb, :alb, :nlb], "Type of elastic load balancer (elb, alb, nlb)") do |t|
         @options[:elb_type] = t
       end
       opts.on("-n", "--name ELB_NAME", "Name of load balancer. DO NOT provider ARN") do |n|
@@ -181,7 +181,7 @@ class ELBManager
       opts.on("-i", "--instance-id EC2_INSTANCE_ID", "EC2 instance id") do |i|
         @options[:instance_id] = i
       end
-      opts.on("-k", "--task TASK", "Desirable action. `register` or `deregister`") do |k|
+      opts.on("-k", "--task TASK", [:register, :deregister], "Desirable action (register, deregister)") do |k|
         @options[:task] = k
       end
       opts.on("-o", "--timeout SECONDS", OptionParser::DecimalInteger, "Instance (de)registeration timeout") do |o|
