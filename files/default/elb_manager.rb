@@ -41,18 +41,51 @@ class ELBManager
   end
 
   def elb_registrar
-    begin
-      case @options[:task].downcase
-      when 'register'
-        waiter_name = 'instance_in_service'
-        client.register_instances_with_load_balancer(elb_instance_params)
-      when 'deregister'
-        waiter_name = 'instance_deregistered'
-        client.deregister_instances_from_load_balancer(elb_instance_params)
-      end
+    case @options[:task].downcase
+    when 'register'
+      waiter_name = 'instance_in_service'
+      client.register_instances_with_load_balancer(elb_instance_params)
+    when 'deregister'
+      waiter_name = 'instance_deregistered'
+      client.deregister_instances_from_load_balancer(elb_instance_params)
+    end
 
-      # Build the following structure: client.wait_until(:instance_deregistered, elb_instance_params) do |w|
-      client.wait_until(waiter_name.to_sym, elb_instance_params) do |w|
+    wait_for_lb_action(waiter_name, elb_instance_params)
+  end
+
+  def elbv2_registrar
+    case @options[:task].downcase
+    when 'register'
+      task_method_name = 'register_targets'
+      waiter_name = 'target_in_service'
+    when 'deregister'
+      task_method_name = 'deregister_targets'
+      waiter_name = 'target_deregistered'
+    end
+
+    threads = []
+    # Each target group operation has its own thread
+    elb_instance_params.each do |elb_instance_param|
+      threads << Thread.new {
+        # Build the following structure: client.deregister_targets(elb_instance_param)
+        client.send task_method_name.to_sym, elb_instance_param
+        wait_for_lb_action(waiter_name, elb_instance_param)
+      }
+    end
+    threads.each(&:join)
+  end
+
+  ##
+  # Wait until the specified elb or elbv2 action completes. Check AWS SDK ELB and ELBv2 for supported
+  # waiters and param types.
+  #   waiter - String
+  #   param - Hash
+  # ELB SDK: https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/ElasticLoadBalancing/Waiters.html
+  # ELBv2 SDK: https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/ElasticLoadBalancingV2/Waiters.html
+  def wait_for_lb_action(waiter, param)
+    begin
+      # i.e. client.wait_until(:target_deregistered, elb_instance_param) do |w|
+      client.wait_until(waiter.to_sym, param) do |w|
         # disable max attempts
         w.max_attempts = nil
 
@@ -65,46 +98,6 @@ class ELBManager
           throw :failure if Time.now > @timeout_at
         end
       end
-    rescue Aws::Waiters::Errors::WaiterFailed
-      # Convert '(de)register' to a noun
-      raise "max # of attempts reached. #{@options[:task][0...-2]}ration of #{@options[:instance_id]} from #{@options[:elb_name]} failed."
-    end
-  end
-
-  def elbv2_registrar
-    begin
-      case @options[:task].downcase
-      when 'register'
-        task_method_name = 'register_targets'
-        waiter_name = 'target_in_service'
-      when 'deregister'
-        task_method_name = 'deregister_targets'
-        waiter_name = 'target_deregistered'
-      end
-
-      threads = []
-      # Each target group operation has its own thread
-      elb_instance_params.each do |elb_instance_param|
-        threads << Thread.new {
-          # Build the following structure: client.deregister_targets(elb_instance_param)
-          client.send task_method_name.to_sym, elb_instance_param
-          # Build the following structure: client.wait_until(:target_deregistered, elb_instance_param) do |w|
-          client.wait_until(waiter_name.to_sym, elb_instance_param) do |w|
-            # disable max attempts
-            w.max_attempts = nil
-
-            w.before_attempt do |attempts|
-              chef::log.info("#{@options[:elb_type].upcase} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})")
-            end
-
-            w.delay = 15
-            w.before_wait do
-              throw :failure if Time.now > @timeout_at
-            end
-          end
-        }
-      end
-      threads.each(&:join)
     rescue Aws::Waiters::Errors::WaiterFailed
       # Convert '(de)register' to a noun
       raise "max # of attempts reached. #{@options[:task][0...-2]}ration of #{@options[:instance_id]} from #{@options[:elb_name]} failed."
