@@ -1,6 +1,6 @@
 #!/usr/local/bin/ruby
 
-# Usage: elb_manager.rb <region_name> <elb_type> <elb_name> <instance_id> <register/deregister> <registration_timeout>
+# Usage: elb_manager.rb -r <region_name> -t <elb_type> -n <elb_name> -i <instance_id> -k <register/deregister> -o <registration_timeout>
 
 require 'optparse'
 require 'aws-sdk-core'
