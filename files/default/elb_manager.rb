@@ -173,7 +173,7 @@ class ELBManager
         @options[:region] = r
       end
       opts.on("-t", "--type ELB_TYPE", [:elb, :alb, :nlb], "Type of elastic load balancer (elb, alb, nlb)") do |t|
-        @options[:elb_type] = t
+        @options[:elb_type] = t.to_s
       end
       opts.on("-n", "--name ELB_NAME", "Name of load balancer. DO NOT provider ARN") do |n|
         @options[:elb_name] = n
@@ -182,7 +182,7 @@ class ELBManager
         @options[:instance_id] = i
       end
       opts.on("-k", "--task TASK", [:register, :deregister], "Desirable action (register, deregister)") do |k|
-        @options[:task] = k
+        @options[:task] = k.to_s
       end
       opts.on("-o", "--timeout SECONDS", OptionParser::DecimalInteger, "Instance (de)registeration timeout") do |o|
         @options[:timeout] = o
