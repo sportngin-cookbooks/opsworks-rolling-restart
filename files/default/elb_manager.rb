@@ -3,7 +3,6 @@
 # Usage: elb_manager.rb -r <region_name> -t <elb_type> -n <elb_name> -i <instance_id> -k <register/deregister> -o <registration_timeout>
 
 require 'optparse'
-require 'aws-sdk-core'
 require 'aws-sdk-elasticloadbalancing'
 require 'aws-sdk-elasticloadbalancingv2'
 
@@ -108,16 +107,14 @@ class ELBManager
   # Returns an arr of hash structures for alb/nlb, or a hash structure for elb.
   # The structure is meant to be ingested by AWS SDK functions.
   def elb_instance_params
-    unless @elb_instance_params
-      case @options[:elb_type].downcase
-      when 'elb'
-        elb_sdk_param_builder
-      when 'alb', 'nlb'
-        elbv2_sdk_param_builder
-      end
-    end
+    return @elb_instance_params if @elb_instance_params
 
-    @elb_instance_params
+    case @options[:elb_type].downcase
+    when 'elb'
+      elb_sdk_param_builder
+    when 'alb', 'nlb'
+      elbv2_sdk_param_builder
+    end
   end
 
   def elb_sdk_param_builder
