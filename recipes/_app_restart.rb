@@ -3,8 +3,12 @@ extend RollingRestart::Helpers
 if elb_load_balancer?
   node.set[:app_restart][:elb_load_balancer_name] = elb_load_balancer_name if elb_load_balancer_name && !node[:app_restart][:elb_load_balancer_name]
 
-  gem_package 'aws-sdk-core' do
-    version '2.10'
+  gem_package 'aws-sdk-elasticloadbalancing' do
+    version '1.20'
+  end
+
+  gem_package 'aws-sdk-elasticloadbalancingv2' do
+    version '1.14'
   end
 
   cookbook_file "#{node[:app_restart][:bin_dir]}/elb_manager.rb" do

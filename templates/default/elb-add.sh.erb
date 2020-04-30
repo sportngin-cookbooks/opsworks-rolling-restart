@@ -5,5 +5,11 @@ function say_loudly {
   echo "================ $(date --rfc-3339=s) $@ ================"| tee >($LOG_CMD)
 }
 
-say_loudly "ADDING <%= @node[:hostname] %> TO ELB: <%= @node[:app_restart][:elb_load_balancer_name] %>"
-<%= @node[:app_restart][:bin_dir] %>/elb_manager.rb <%= @region %> <%= @node[:app_restart][:elb_load_balancer_name] %> <%= @node[:ec2][:instance_id] %> register
+<% all_lbs = @node[:rolling_restart][:additional_load_balancers].dup %>
+<% all_lbs[@node[:app_restart][:elb_load_balancer_name]] = @node[:rolling_restart][:load_balancer_type] %>
+<% all_lbs.each do |name, type| %>
+  say_loudly "ADDING <%= @node[:hostname] %> TO <%= type.upcase %>: <%= name %>" &
+  <%= @node[:app_restart][:bin_dir] %>/elb_manager.rb -r <%= @region %> -t <%= type %> -n <%= name %> -i <%= @node[:ec2][:instance_id] %> -k register -o <%= @node[:rolling_restart][:conn_draining_timeout] %> &
+<% end %>
+# Wait for the previous processes to finish
+wait
