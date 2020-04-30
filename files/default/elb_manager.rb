@@ -89,7 +89,7 @@ class ELBManager
         w.max_attempts = nil
 
         w.before_attempt do |attempts|
-          chef::log.info("#{@options[:elb_type].upcase} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})")
+          puts "#{@options[:elb_type].upcase} #{@options[:elb_name]}: waiting for #{@options[:instance_id]} to be #{@options[:task]}ed (attempt #{attempts + 1})"
         end
 
         w.delay = 15
